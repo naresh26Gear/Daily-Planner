@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ═══════════ NAV ═══════════ -->
+  <nav id="mainNav">
+    <a class="nav-brand" href="#">
+      <span class="brand-icon">📋</span>
+      <span class="brand-text">Daily<em>Planner</em></span>
+    </a>
+
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#section-habits"  class="nav-link active">Habits</a></li>
+      <li><a href="#section-goals"   class="nav-link">Goals</a></li>
+      <li><a href="#section-water"   class="nav-link">Water</a></li>
+      <li><a href="#section-journal" class="nav-link">Journal</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <label class="theme-toggle" title="Toggle dark mode">
+        <input type="checkbox" id="themeToggle" />
+        <div class="toggle-track">
+          <span class="toggle-icon sun">☀️</span>
+          <span class="toggle-thumb"></span>
+          <span class="toggle-icon moon">🌙</span>
+        </div>
+      </label>
+
+      <button class="btn-pdf" id="btnPdf" onclick="exportPDF()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Save PDF
+      </button>
+    </div>
+  </nav>
+
+  <!-- ═══════════ MAIN ═══════════ -->
+  <main id="plannerContent">
+
+    <!-- Header -->
+    <header class="planner-header">
+      <h1 class="planner-title">Daily <em>Planner</em></h1>
+      <p class="planner-date-display" id="dateDisplay"></p>
+    </header>
+
+    <!-- Meta Row -->
+    <div class="meta-row">
+      <div class="meta-card">
+        <label class="meta-label">📅 Date &amp; Place</label>
+        <div class="meta-inputs">
+          <input type="date" id="planDate" class="meta-input" />
+          <input type="text" id="planPlace" class="meta-input" placeholder="Place (e.g. Raigarh)" />
+        </div>
+      </div>
+      <div class="meta-card">
+        <label class="meta-label">📆 Day of Week</label>
+        <div class="day-selector" id="daySelector">
+          <button class="day-btn" data-day="0">S</button>
+          <button class="day-btn" data-day="1">M</button>
+          <button class="day-btn" data-day="2">T</button>
+          <button class="day-btn" data-day="3">W</button>
+          <button class="day-btn" data-day="4">T</button>
+          <button class="day-btn" data-day="5">F</button>
+          <button class="day-btn" data-day="6">S</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── HABITS ── -->
+    <section class="section" id="section-habits" style="--delay:0.05s">
+      <div class="section-label">
+        <span>🌟 Daily Habits</span>
+      </div>
+      <div class="habits-grid" id="habitsGrid"></div>
+      <div class="habit-add-row">
+        <input type="text" id="habitInput" class="habit-input" placeholder="New habit name…" maxlength="30" />
+        <select id="habitEmoji" class="habit-emoji-sel">
+          <option value="🎯">🎯</option>
+          <option value="🧘">🧘</option>
+          <option value="🏃">🏃</option>
+          <option value="💪">💪</option>
+          <option value="📚">📚</option>
+          <option value="🌱">🌱</option>
+          <option value="🔥">🔥</option>
+          <option value="⭐">⭐</option>
+          <option value="💎">💎</option>
+          <option value="🎵">🎵</option>
+          <option value="✍️">✍️</option>
+          <option value="🧠">🧠</option>
+        </select>
+        <button class="btn-add-habit" id="btnAddHabit">+ Add Habit</button>
+      </div>
+    </section>
+
+    <!-- ── TASKS / GOALS ── -->
+    <section class="section" id="section-goals" style="--delay:0.10s">
+      <div class="section-label"><span>🎯 Today's Goals</span></div>
+
+      <div class="task-filter-row">
+        <span class="filter-label">Filter:</span>
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="high"><span class="dot red"></span>High</button>
+        <button class="filter-btn" data-filter="medium"><span class="dot yellow"></span>Medium</button>
+        <button class="filter-btn" data-filter="low"><span class="dot green"></span>Low</button>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span>Completion</span><span id="progressText">0 / 0 tasks</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      </div>
+
+      <div class="tasks-list" id="tasksList"></div>
+      <button class="add-task-btn" id="btnAddTask">＋ Add New Task</button>
+
+      <div class="priority-legend">
+        <span><span class="dot red"></span>High Priority</span>
+        <span><span class="dot yellow"></span>Medium Priority</span>
+        <span><span class="dot green"></span>Low Priority</span>
+      </div>
+    </section>
+
+    <!-- ── WATER ── -->
+    <section class="section" id="section-water" style="--delay:0.15s">
+      <div class="section-label"><span>💧 Water Tracker</span></div>
+      <div class="water-header">
+        <div class="water-stats">
+          <div class="water-consumed" id="waterConsumed">0 ml</div>
+          <div class="water-goal-text" id="waterGoalText">/ 3000 ml goal</div>
+          <div class="water-pct" id="waterPct">0%</div>
+        </div>
+        <div class="water-controls">
+          <label class="meta-label">Goal (L)</label>
+          <input type="number" id="waterGoalInput" min="1" max="6" value="3" class="water-goal-inp" />
+        </div>
+      </div>
+      <div class="water-progress-bar">
+        <div class="water-progress-fill" id="waterProgressFill" style="width:0%"></div>
+        <div class="water-wave" id="waterWave"></div>
+      </div>
+      <div class="water-cups" id="waterCups"></div>
+      <p class="water-hint">Each cup = 200 ml · Click to fill / unfill</p>
+    </section>
+
+    <!-- ── THOUGHTS & QUOTE ── -->
+    <div class="two-col">
+      <section class="section" style="--delay:0.20s">
+        <div class="section-label"><span>💡 Thoughts &amp; Ideas</span></div>
+        <div class="editor-wrap">
+          <div class="fmt-toolbar" data-target="thoughtsEditor">
+            <button class="fmt-btn" data-cmd="bold"      title="Bold"><b>B</b></button>
+            <button class="fmt-btn" data-cmd="italic"    title="Italic"><i>I</i></button>
+            <button class="fmt-btn" data-cmd="underline" title="Underline"><u>U</u></button>
+          </div>
+          <div class="rich-editor" id="thoughtsEditor" contenteditable="true"
+               data-placeholder="Write your thoughts, ideas and insights…" spellcheck="true"></div>
+        </div>
+      </section>
+
+      <section class="section" style="--delay:0.22s" id="section-journal">
+        <div class="section-label"><span>✨ Motivational Quote</span></div>
+        <div class="quote-box">
+          <div class="quote-mark">"</div>
+          <div class="rich-editor quote-editor" id="quoteEditor" contenteditable="true"
+               data-placeholder="Write or generate a quote…"></div>
+          <button class="gen-quote-btn" id="btnGenQuote">🎲 Random Quote</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── JOURNAL SUMMARY ── -->
+    <section class="section" style="--delay:0.25s">
+      <div class="section-label"><span>📓 Daily Journal &amp; Summary</span></div>
+      <div class="editor-wrap">
+        <div class="fmt-toolbar" data-target="summaryEditor">
+          <button class="fmt-btn" data-cmd="bold"      title="Bold"><b>B</b></button>
+          <button class="fmt-btn" data-cmd="italic"    title="Italic"><i>I</i></button>
+          <button class="fmt-btn" data-cmd="underline" title="Underline"><u>U</u></button>
+        </div>
+        <div class="rich-editor summary-editor" id="summaryEditor" contenteditable="true"
+             data-placeholder="End-of-day reflection — your wins, learnings and gratitude…" spellcheck="true"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- HABIT ADD MODAL -->
+  <div class="modal-overlay" id="modalOverlay" style="display:none" onclick="closeModal(event)">
+    <div class="modal" id="habitModal">
+      <h3 class="modal-title">Add New Habit</h3>
+      <div class="modal-body">
+        <label class="modal-label">Habit Name</label>
+        <input type="text" id="modalHabitName" class="modal-input" placeholder="e.g. Morning Walk" maxlength="25" />
+        <label class="modal-label" style="margin-top:14px">Icon</label>
+        <div class="emoji-grid" id="emojiGrid"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeHabitModal()">Cancel</button>
+        <button class="btn-confirm" id="btnConfirmHabit">Add Habit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
