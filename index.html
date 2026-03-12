@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Daily Planner</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,700;1,500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- Ambient background particles -->
+  <div class="ambient-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <div class="brand">
+      <span class="brand-icon">✦</span>
+      <span class="brand-name">DayFlow</span>
+    </div>
+    <div class="top-bar-right">
+      <div class="storage-badge" id="storageBadge" title="Auto-saving today's data">
+        <span class="storage-dot"></span>
+        <span>Auto-saved</span>
+      </div>
+      <button class="save-pdf-btn" id="savePdfBtn">
+        <span class="btn-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+        </span>
+        <span class="btn-text">Save as PDF</span>
+        <span class="btn-loader" id="pdfLoader"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- New day toast -->
+  <div class="new-day-toast" id="newDayToast">
+    <span class="toast-icon">🌅</span>
+    <span id="toastMsg">Good morning! Yesterday's planner has been cleared. Start fresh!</span>
+    <button class="toast-close" id="toastClose" aria-label="Dismiss">✕</button>
+  </div>
+
+  <!-- Main planner content -->
+  <main class="planner-wrapper" id="plannerContent">
+
+    <!-- Hero: Date & Day -->
+    <section class="card card-hero animate-in" style="--delay:0.1s" id="section-date">
+      <div class="card-inner">
+        <div class="date-display">
+          <div class="day-name" id="dayName">Monday</div>
+          <div class="date-full" id="dateFull">January 1, 2025</div>
+          <div class="week-number" id="weekNum">Week 1 of 52</div>
+        </div>
+        <div class="date-decor">
+          <div class="date-big" id="dateBig">01</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Row: Weather + Mood -->
+    <div class="two-col">
+
+      <!-- Weather -->
+      <section class="card card-weather animate-in" style="--delay:0.2s" id="section-weather">
+        <div class="section-label">☁ Weather</div>
+        <div class="weather-selector">
+          <button class="weather-opt active" data-weather="sunny" title="Sunny">☀️</button>
+          <button class="weather-opt" data-weather="cloudy" title="Cloudy">⛅</button>
+          <button class="weather-opt" data-weather="rainy" title="Rainy">🌧️</button>
+          <button class="weather-opt" data-weather="stormy" title="Stormy">⛈️</button>
+          <button class="weather-opt" data-weather="snowy" title="Snowy">❄️</button>
+          <button class="weather-opt" data-weather="windy" title="Windy">🌬️</button>
+        </div>
+        <div class="weather-label-display" id="weatherLabel">Sunny & Bright</div>
+        <div class="temp-input-wrap">
+          <input type="number" id="tempInput" class="temp-input" placeholder="°C" min="-50" max="60" />
+          <span class="temp-unit">°C</span>
+        </div>
+      </section>
+
+      <!-- Mood -->
+      <section class="card card-mood animate-in" style="--delay:0.3s" id="section-mood">
+        <div class="section-label">✦ Today's Mood</div>
+        <div class="mood-selector">
+          <button class="mood-opt" data-mood="amazing" title="Amazing">🤩</button>
+          <button class="mood-opt active" data-mood="happy" title="Happy">😊</button>
+          <button class="mood-opt" data-mood="calm" title="Calm">😌</button>
+          <button class="mood-opt" data-mood="tired" title="Tired">😴</button>
+          <button class="mood-opt" data-mood="anxious" title="Anxious">😟</button>
+          <button class="mood-opt" data-mood="sad" title="Sad">😢</button>
+        </div>
+        <div class="mood-label-display" id="moodLabel">Feeling Happy</div>
+        <textarea class="mood-note" id="moodNote" placeholder="What's on your mind today?..." rows="2"></textarea>
+      </section>
+
+    </div>
+
+    <!-- TODOs -->
+    <section class="card card-todos animate-in" style="--delay:0.4s" id="section-todos">
+      <div class="section-header">
+        <div class="section-label">✓ Tasks for Today</div>
+        <div class="todo-stats" id="todoStats">0 / 0 done</div>
+      </div>
+      <div class="todo-progress-bar">
+        <div class="todo-progress-fill" id="todoProgress" style="width:0%"></div>
+      </div>
+      <div class="todo-list" id="todoList">
+        <!-- Todos injected by JS -->
+      </div>
+      <div class="todo-add-row">
+        <input type="text" id="todoInput" class="todo-input" placeholder="Add a new task..." />
+        <select class="todo-priority" id="todoPriority">
+          <option value="high">🔴 High</option>
+          <option value="medium" selected>🟡 Medium</option>
+          <option value="low">🟢 Low</option>
+        </select>
+        <button class="add-btn" id="addTodoBtn">+ Add</button>
+      </div>
+    </section>
+
+    <!-- Today's Achievement -->
+    <section class="card card-achievement animate-in" style="--delay:0.5s" id="section-achievement">
+      <div class="section-label">🏆 Today's Achievements</div>
+      <div class="achievement-list" id="achievementList"></div>
+      <div class="achievement-add-row">
+        <input type="text" id="achievementInput" class="achievement-input" placeholder="What did you accomplish today?..." />
+        <button class="add-btn" id="addAchievementBtn">+ Add</button>
+      </div>
+    </section>
+
+    <!-- Row: Water + Motivation -->
+    <div class="two-col">
+
+      <!-- Water Tracker -->
+      <section class="card card-water animate-in" style="--delay:0.6s" id="section-water">
+        <div class="section-label">💧 Hydration Goal — 3L</div>
+        <div class="water-cups" id="waterCups">
+          <!-- 8 cups = ~250ml each = 2L ... we'll do 12 cups = 250ml = 3L -->
+        </div>
+        <div class="water-info">
+          <span id="waterAmount">0 ml</span>
+          <span class="water-goal">/ 3000 ml</span>
+        </div>
+        <div class="water-bar-wrap">
+          <div class="water-bar-fill" id="waterBar" style="width:0%"></div>
+        </div>
+      </section>
+
+      <!-- Motivation -->
+      <section class="card card-motivation animate-in" style="--delay:0.7s" id="section-motivation">
+        <div class="section-label">⚡ Motivation of the Day</div>
+        <div class="motivation-quote-wrap">
+          <div class="quote-mark">"</div>
+          <div class="motivation-quote" id="motivationQuote">Loading your daily spark...</div>
+          <div class="quote-author" id="motivationAuthor">— DayFlow</div>
+        </div>
+        <button class="refresh-quote-btn" id="refreshQuote">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          New Quote
+        </button>
+      </section>
+
+    </div>
+
+    <!-- Daily Journal -->
+    <section class="card card-journal animate-in" style="--delay:0.8s" id="section-journal">
+      <div class="section-header">
+        <div class="section-label">📖 Daily Journal</div>
+        <div class="journal-word-count" id="wordCount">0 words</div>
+      </div>
+      <div class="journal-prompts" id="journalPrompts">
+        <button class="prompt-chip active" data-prompt="">Free Write</button>
+        <button class="prompt-chip" data-prompt="What are you grateful for today? ">🙏 Gratitude</button>
+        <button class="prompt-chip" data-prompt="What challenged you today and what did you learn? ">💡 Reflection</button>
+        <button class="prompt-chip" data-prompt="What do you want to do better tomorrow? ">🚀 Growth</button>
+      </div>
+      <textarea class="journal-text" id="journalText" placeholder="Begin writing your thoughts, reflections, and memories of today...
+
+This is your private space to think freely." rows="8"></textarea>
+    </section>
+
+    <!-- Footer stamp -->
+    <div class="planner-footer">
+      <span>DayFlow Planner ✦</span>
+      <span id="footerDate"></span>
+    </div>
+
+  </main>
+
+  <!-- PDF overlay -->
+  <div class="pdf-overlay" id="pdfOverlay">
+    <div class="pdf-modal">
+      <div class="pdf-spinner"></div>
+      <div class="pdf-status" id="pdfStatus">Preparing your planner...</div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
